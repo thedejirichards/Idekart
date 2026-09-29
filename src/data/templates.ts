@@ -111,7 +111,7 @@ export const TEMPLATES: Template[] = [
     id: 'dining',
     name: 'Special dining experience',
     category: 'food',
-    keywords: ['restaurant', 'dinner', 'dine', 'dining', 'eat at', 'chef', 'tasting menu', 'michelin', 'brunch', 'food'],
+    keywords: ['restaurant', 'dinner', 'dine', 'dining', 'eat at', 'chef', 'tasting menu', 'michelin', 'brunch', 'food', 'sushi', 'omakase'],
     blurb: 'A table somewhere special, with food worth dressing up for.',
     defaultNights: 0,
     requiresBooking: true,
@@ -210,7 +210,6 @@ export const TEMPLATES: Template[] = [
     name: 'Custom experience',
     category: 'personal',
     keywords: [],
-    blurb: 'Your own goal, broken into steps you can act on.',
     defaultNights: 0,
     requiresBooking: false,
     milestones: [

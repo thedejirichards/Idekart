@@ -19,7 +19,7 @@ export default function Admin() {
           <p className="muted">Manage the rule-based catalog and watch how the MVP is doing.</p>
         </div>
       </div>
-      <div className="seg" style={{ alignSelf: 'flex-start' }}>
+      <div className="seg page-tabs" style={{ alignSelf: 'flex-start' }}>
         {(['overview', 'locations', 'templates', 'settings'] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>
         ))}
@@ -159,7 +159,7 @@ function Templates() {
                 <h3>{t.name}</h3>
                 <span className="chip"><span className="dot" style={{ background: c.color }} />{c.name}</span>
               </div>
-              <div className="tiny muted">{n} location{n === 1 ? '' : 's'} · {t.milestones.length} milestones · {t.requiresBooking ? 'booking usually needed' : 'no booking'}</div>
+              <div className="tiny muted">{n} location{n === 1 ? '' : 's'} · {t.milestones.length} milestones · {t.requiresBooking ? 'booking often helps' : 'booking optional'}</div>
               {t.keywords.length > 0 && (
                 <div className="row wrap" style={{ gap: 4 }}>{t.keywords.map((k) => <span key={k} className="chip" style={{ fontWeight: 500 }}>{k}</span>)}</div>
               )}

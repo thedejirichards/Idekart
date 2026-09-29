@@ -1,17 +1,17 @@
-import { Icon, Logo } from '../components/Icon'
+import { Icon } from '../components/Icon'
 import { useStore } from '../lib/store'
 
 const STEPS = [
-  ['Say the dream', 'Type it the way you’d say it: “I want to go on a safari.”'],
-  ['Get the where', 'We match it to real places you can do it — near home or far away.'],
-  ['See the cost', 'An itemised estimate: transport, stay, fees, food and a buffer.'],
-  ['Book, go, tick it off', 'Directions, bookings and payments, plus a plan with milestones to track.'],
+  ['Start with a feeling', '“Try sushi”, “get outside”, or that big trip you keep thinking about.'],
+  ['Find your kind of place', 'Browse ideas on a map, close to home or somewhere new.'],
+  ['Make a light plan', 'Add a note, a date or a budget when they’re useful. Skip them when they’re not.'],
+  ['Go your own way', 'Book when it helps. Otherwise, take the directions and enjoy the day.'],
 ]
 
 const PERSONAS = [
   ['The Dreamer', 'Lots of “someday”s, not many done yet. Idekart turns each one into a first step.'],
   ['The Planner', 'Already knows the list. Wants budgets, milestones and a place to track them.'],
-  ['The Occasion-Driven', 'A birthday or anniversary is coming. Needs ideas, prices and a booking — fast.'],
+  ['The Occasion-Driven', 'A birthday or anniversary is coming. Needs a good idea and a place that feels right.'],
 ]
 
 export default function Landing() {
@@ -19,7 +19,7 @@ export default function Landing() {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <a className="brand" href="#/"><Logo /> Idekart</a>
+        <a className="brand" href="#/"><img src="/IdekartLogo.svg" alt="Idekart" /></a>
         <div className="row">
           {user ? (
             <a className="btn btn-dark" href="#/app">Open dashboard</a>
@@ -36,10 +36,10 @@ export default function Landing() {
         <div>
           <div className="eyebrow">Bucket lists, made real</div>
           <h1 className="mt-16">
-            Turn <em>someday</em> into a plan.
+            Make room for <em>something fun.</em>
           </h1>
           <p className="lead">
-            Idekart takes the things you’ve always wanted to do and tells you where, when, how to get there and how much it’ll cost. Then it helps you book it.
+            Find a new favourite, explore places on the map and make a plan that fits your life. Book if you need to—or just get directions and go.
           </p>
           <div className="row wrap">
             <a className="btn btn-primary btn-lg" href={user ? '#/new' : '#/signup'}>
@@ -90,25 +90,25 @@ export default function Landing() {
 function HeroCards() {
   return (
     <>
-      <div className="cover" style={{ '--h': 32, inset: '0 22% 26% 0' } as React.CSSProperties}>
+      <div className="cover" style={{ '--h': 342, inset: '0 22% 26% 0' } as React.CSSProperties}>
         <div className="sun" />
         <div className="label">
-          <div className="eyebrow" style={{ color: '#fff4e8' }}>Adventure</div>
-          <div className="display" style={{ fontSize: 26, fontWeight: 600 }}>Go on a safari</div>
+          <div className="eyebrow" style={{ color: '#fff4e8' }}>Dinner idea</div>
+          <div className="display" style={{ fontSize: 26, fontWeight: 600 }}>Try sushi</div>
         </div>
       </div>
       <div className="cover" style={{ '--h': 190, inset: '46% 0 0 34%' } as React.CSSProperties}>
         <div className="sun" />
         <div className="label">
-          <div className="eyebrow" style={{ color: '#e6fbff' }}>Travel</div>
-          <div className="display" style={{ fontSize: 24, fontWeight: 600 }}>Visit Zanzibar</div>
+          <div className="eyebrow" style={{ color: '#e6fbff' }}>A day out</div>
+          <div className="display" style={{ fontSize: 24, fontWeight: 600 }}>Find a beach</div>
         </div>
       </div>
       <div className="card" style={{ position: 'absolute', right: 0, top: '6%', padding: 16, width: 230, zIndex: 2 }}>
-        <div className="tiny muted">Estimated total · 2 people</div>
-        <div className="display strong" style={{ fontSize: 24 }}>₦3,720,000</div>
+        <div className="tiny muted">Your next little step</div>
+        <div className="display strong" style={{ fontSize: 22 }}>Find a good spot</div>
         <div className="progress mt-8"><i style={{ width: '40%' }} /></div>
-        <div className="tiny muted mt-4">2 of 6 milestones done</div>
+        <div className="tiny muted mt-4">Pick a date if you like</div>
       </div>
     </>
   )

@@ -30,7 +30,7 @@ export interface Template {
   name: string
   category: CategoryId
   keywords: string[]
-  blurb: string
+  blurb?: string
   /** 0 means a day experience with no overnight stay. */
   defaultNights: number
   requiresBooking: boolean

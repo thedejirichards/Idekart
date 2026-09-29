@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon'
 import { BudgetBreakdown, LocationFacts, MapCard } from '../components/LocationParts'
 import { CategoryChip, Cover, Stepper } from '../components/ui'
 import { cityById } from '../data/locations'
+import { reviewsForPlace } from '../data/reviews'
 import { templateById } from '../data/templates'
 import { estimateBudget } from '../lib/rules'
 import { useStore } from '../lib/store'
@@ -17,6 +18,7 @@ export default function LocationPage({ id }: { id: string }) {
   if (!loc) return <div className="empty"><h3>Location not found</h3><a className="btn btn-dark mt-16" href="#/explore">Back to explore</a></div>
   const estimate = estimateBudget(loc, cityById(user?.homeCity ?? 'lagos'), { travelers, nights })
   const cats = [...new Set(loc.templates.map((t) => templateById(t)?.category).filter(Boolean))]
+  const placeReviews = reviewsForPlace(loc.id)
 
   return (
     <div className="stack-lg">
@@ -41,6 +43,36 @@ export default function LocationPage({ id }: { id: string }) {
             </div>
             <hr className="divider" />
             <LocationFacts location={loc} />
+          </section>
+          <section className="card stack">
+            <div className="row between row-top">
+              <div>
+                <h2>Visitor reviews</h2>
+                <p className="small muted mt-4">Notes from people who have been here.</p>
+              </div>
+              {placeReviews && (
+                <div className="review-summary">
+                  <span><i>★</i> {placeReviews.average.toFixed(1)}</span>
+                  <small>{placeReviews.count} reviews</small>
+                </div>
+              )}
+            </div>
+            {placeReviews ? (
+              <div className="review-list">
+                {placeReviews.reviews.map((review) => (
+                  <article className="place-review" key={`${review.name}-${review.date}`}>
+                    <div className="row between">
+                      <b>{review.name}</b>
+                      <span className="tiny muted">{review.date}</span>
+                    </div>
+                    <div className="place-stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div>
+                    <p className="small muted">{review.text}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="small muted">No reviews yet. Be the first to add a note after your visit.</p>
+            )}
           </section>
           <section className="card"><MapCard location={loc} /></section>
         </div>

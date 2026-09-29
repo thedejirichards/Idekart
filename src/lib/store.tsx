@@ -99,9 +99,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [allItems, setItems] = useState<BucketItem[]>(() => load(K.items, []))
   const [allBookings, setBookings] = useState<Booking[]>(() => load(K.bookings, []))
   const [allPayments, setPayments] = useState<Payment[]>(() => load(K.payments, []))
-  const [catalog, setCatalog] = useState<Catalog>(() =>
-    load(K.catalog, { locations: SEED_LOCATIONS, fxRate: DEFAULT_FX }),
-  )
+  const [catalog, setCatalog] = useState<Catalog>(() => {
+    const stored = load(K.catalog, { locations: SEED_LOCATIONS, fxRate: DEFAULT_FX })
+    const additions = SEED_LOCATIONS.filter((seed) => !stored.locations.some((location) => location.id === seed.id))
+    return additions.length ? { ...stored, locations: [...stored.locations, ...additions] } : stored
+  })
 
   useEffect(() => save(K.users, users), [users])
   useEffect(() => save(K.session, sessionId), [sessionId])

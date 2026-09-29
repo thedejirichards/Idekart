@@ -95,7 +95,7 @@ export default function Dashboard() {
           <div className="empty">
             <Icon name="sparkle" size={32} />
             <h3>Your list is empty — for now</h3>
-            <p className="muted">What have you always wanted to do? Start with one idea.</p>
+            <p className="muted">What sounds fun? It can be a big dream or a small new thing.</p>
             <a className="btn btn-primary mt-16" href="#/new">Add your first idea</a>
           </div>
         ) : shown.length === 0 ? (

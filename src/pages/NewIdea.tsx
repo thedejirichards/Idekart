@@ -7,22 +7,22 @@ import { CATEGORIES } from '../data/categories'
 import { cityById } from '../data/locations'
 import { TEMPLATES, templateById } from '../data/templates'
 import { navigate, query } from '../lib/router'
-import { estimateBudget, formatDuration, generateMilestones, matchIdea, suggestLocations, today } from '../lib/rules'
+import { estimateBudget, formatDuration, generateMilestones, matchIdea, suggestLocations, today, titleFromIdea } from '../lib/rules'
 import type { IdeaMatch } from '../lib/rules'
 import { useStore } from '../lib/store'
 import type { CategoryId } from '../lib/types'
 import { formatDate } from '../lib/util'
 
 const EXAMPLES = [
-  'I want to go on a safari',
-  'I want to visit Zanzibar',
-  'Go skydiving before I turn 30',
+  'Try sushi',
+  'Take a boat to a beach',
+  'Catch a live show',
   'Learn to cook jollof properly',
-  'Experience Calabar Carnival',
-  'Anniversary dinner somewhere special',
+  'Go on a safari',
+  'Celebrate somewhere special',
 ]
 
-const STEP_NAMES = ['Idea', 'Structure', 'Location', 'Budget', 'Plan']
+const STEP_NAMES = ['Idea', 'Details', 'Place', 'Plan']
 
 export default function NewIdea({ path }: { path: string }) {
   const { user, catalog, location, addItem } = useStore()
@@ -50,14 +50,17 @@ export default function NewIdea({ path }: { path: string }) {
     [templateId, catalog.locations, home, travelers, nights, m, preLoc],
   )
   const estimate = loc ? estimateBudget(loc, home, { travelers, nights }) : null
-  const milestones = useMemo(() => generateMilestones(template, targetDate || null, loc ?? null), [template, targetDate, loc])
+  const milestones = useMemo(() => {
+    const planLocation = catalog.locations.find((candidate) => candidate.id === locationId) ?? null
+    return generateMilestones(template, targetDate || null, planLocation)
+  }, [catalog.locations, locationId, targetDate, template])
 
   function analyse(text = idea) {
     if (!text.trim()) return
-    const r = matchIdea(text, catalog.locations)
+    const r = matchIdea(`${text} ${description}`, catalog.locations)
     setIdea(text)
     setM(r)
-    setTitle(r.title || text)
+    setTitle(titleFromIdea(text) || text)
     setCategory(r.template.category)
     setTemplateId(r.template.id)
     setNights(r.template.defaultNights)
@@ -100,21 +103,25 @@ export default function NewIdea({ path }: { path: string }) {
       {step === 0 && (
         <section className="stack-lg" style={{ maxWidth: 760 }}>
           <div>
-            <h1>What have you always wanted to do?</h1>
-            <p className="muted mt-8">Write it how you’d say it. We’ll work out the category, where you can do it and what it costs.</p>
+            <h1>What sounds fun?</h1>
+            <p className="muted mt-8">Big dream or a small new thing—start wherever you are. We’ll help you find a place and shape a simple plan.</p>
           </div>
           <form onSubmit={(e) => { e.preventDefault(); analyse() }} className="stack">
             <input
-              className="idea-input" autoFocus placeholder="I want to…" value={idea}
+              className="idea-input" autoFocus placeholder="Try sushi…" value={idea}
               onChange={(e) => setIdea(e.target.value)} aria-label="Your idea"
             />
+            <label className="field idea-note-field">
+              <span>A little note <span className="hint">— optional, but it helps us make this yours</span></span>
+              <textarea className="textarea" rows={2} placeholder="Who’s coming? What would make it special? Any place or detail on your mind?" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </label>
             <div className="row wrap" style={{ gap: 8 }}>
               {EXAMPLES.map((ex) => (
                 <button type="button" key={ex} className="suggest-chip" onClick={() => analyse(ex)}>{ex}</button>
               ))}
             </div>
             <div className="row mt-16">
-              <button className="btn btn-primary btn-lg" disabled={!idea.trim()}>Structure my idea <Icon name="arrow" /></button>
+              <button className="btn btn-primary btn-lg" disabled={!idea.trim()}>Find my experience <Icon name="arrow" /></button>
             </div>
           </form>
         </section>
@@ -124,8 +131,8 @@ export default function NewIdea({ path }: { path: string }) {
         <section className="split">
           <div className="card stack">
             <div>
-              <div className="eyebrow">Step 2 · Structure</div>
-              <h2 className="mt-4">Here’s how we read it</h2>
+              <div className="eyebrow">Step 2 · Details</div>
+              <h2 className="mt-4">Make it feel like yours</h2>
             </div>
             <label className="field">
               <span>Title</span>
@@ -146,12 +153,12 @@ export default function NewIdea({ path }: { path: string }) {
               </label>
             </div>
             <label className="field">
-              <span>Description <span className="hint">— optional</span></span>
-              <textarea className="textarea" placeholder="Why this matters, who’s coming, anything you already know…" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <span>Your note <span className="hint">— optional</span></span>
+              <textarea className="textarea" placeholder="Add a detail that helps shape the experience. You can change this later." value={description} onChange={(e) => setDescription(e.target.value)} />
             </label>
             <div className="grid-3">
               <label className="field">
-                <span>Target date</span>
+                <span>When? <span className="hint">— optional</span></span>
                 <input className="input" type="date" min={today()} value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
               </label>
               <div className="field">
@@ -174,7 +181,7 @@ export default function NewIdea({ path }: { path: string }) {
                 </span>
               </div>
               <h3>{template.name}</h3>
-              <p className="small muted">{template.blurb}</p>
+              {template.blurb && <p className="small muted">{template.blurb}</p>}
               <div className="row wrap" style={{ gap: 6 }}>
                 <CategoryChip id={category} />
                 {m.matchedLocation && <span className="chip chip-accent"><Icon name="pin" size={12} /> {m.matchedLocation.name}</span>}
@@ -190,7 +197,7 @@ export default function NewIdea({ path }: { path: string }) {
               </div>
             )}
             {template.requiresBooking && (
-              <Notice tone="teal">This kind of experience usually needs a reservation. We’ll flag which places you can book on Idekart.</Notice>
+              <Notice tone="teal">Some places need a reservation; others are easy to turn up for. We’ll show you the options for each place.</Notice>
             )}
           </aside>
         </section>
@@ -199,14 +206,14 @@ export default function NewIdea({ path }: { path: string }) {
       {step === 2 && (
         <section className="stack">
           <div>
-            <div className="eyebrow">Step 3 · Location</div>
-            <h2 className="mt-4">Where you can do it</h2>
-            <p className="muted mt-4">Ranked by estimated total cost from {home.name} for {travelers} {travelers > 1 ? 'people' : 'person'}.</p>
+            <div className="eyebrow">Step 3 · Place <span className="hint">— optional</span></div>
+            <h2 className="mt-4">Pick a place, or keep it open</h2>
+            <p className="muted mt-4">Suggestions are ranked by estimated cost from {home.name}. You can skip this and decide later.</p>
           </div>
           {suggestions.length === 0 ? (
             <div className="empty">
               <h3>No specific places for this one</h3>
-              <p className="muted">Goals like this don’t need a location. Skip ahead to build your plan.</p>
+                <p className="muted">This idea can happen anywhere. Continue and keep your plan flexible.</p>
             </div>
           ) : (
             <div className="grid-auto">
@@ -224,7 +231,9 @@ export default function NewIdea({ path }: { path: string }) {
                     <div className="row wrap" style={{ gap: 6 }}>
                       <span className="chip">{reason}</span>
                       <span className="chip">{e.travel.label} · {formatDuration(e.travel.hours)}</span>
-                      {l.booking.mode === 'direct' && <span className="chip chip-teal">Bookable</span>}
+                      <span className={`chip ${l.booking.mode === 'direct' ? 'chip-teal' : ''}`}>
+                        {l.booking.mode === 'direct' ? 'Book here if you like' : l.booking.mode === 'redirect' ? 'Book with provider' : 'No booking needed'}
+                      </span>
                     </div>
                     <div className="row between mt-4">
                       <span className="tiny muted">Est. total</span>
@@ -252,47 +261,12 @@ export default function NewIdea({ path }: { path: string }) {
       )}
 
       {step === 3 && (
-        <section className="grid-2" style={{ alignItems: 'start' }}>
-          <div className="card">
-            <div className="eyebrow">Step 4 · Budget</div>
-            <h2 className="mt-4" style={{ marginBottom: 16 }}>What it’s likely to cost</h2>
-            {estimate ? (
-              <BudgetBreakdown estimate={estimate} userBudget={budgetUsd(budget, user?.currency, catalog.fxRate)} />
-            ) : (
-              <p className="muted">Pick a location to get an itemised estimate, or set your own budget.</p>
-            )}
-          </div>
-          <div className="card stack">
-            <h3>Set your budget</h3>
-            <p className="small muted">Leave blank to use the estimate. You can change it any time.</p>
-            <label className="field">
-              <span>Budget ({user?.currency === 'NGN' ? '₦' : '$'})</span>
-              <input
-                className="input num" inputMode="decimal"
-                placeholder={estimate ? money(estimate.total).replace(/[^\d,]/g, '') : 'e.g. 500,000'}
-                value={budget} onChange={(e) => setBudget(e.target.value)}
-              />
-            </label>
-            <div className="grid-2" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              <div className="field"><span>People</span><Stepper value={travelers} min={1} max={20} onChange={setTravelers} /></div>
-              <div className="field"><span>Nights</span><Stepper value={nights} min={0} max={30} onChange={setNights} /></div>
-            </div>
-            {estimate && targetDate && (
-              <Notice tone="teal">
-                Saving for this? That’s about <b>{money(estimate.total / Math.max(1, monthsUntil(targetDate)))}</b> a month until {formatDate(targetDate, { month: 'long', year: 'numeric' })}.
-              </Notice>
-            )}
-          </div>
-        </section>
-      )}
-
-      {step === 4 && (
         <section className="split">
           <div className="card">
-            <div className="eyebrow">Step 5 · Plan</div>
+            <div className="eyebrow">Step 4 · Plan</div>
             <h2 className="mt-4">Your plan for “{title}”</h2>
             <p className="small muted mt-4">
-              {targetDate ? `Milestones are scheduled back from ${formatDate(targetDate)}.` : 'Add a target date to schedule these milestones.'}
+              {targetDate ? `Milestones are scheduled back from ${formatDate(targetDate)}.` : 'No date yet? That’s fine. You can add one whenever you’re ready.'}
             </p>
             <div className="mt-8">
               {milestones.map((ms) => (
@@ -318,6 +292,18 @@ export default function NewIdea({ path }: { path: string }) {
                 {budget ? money(budgetUsd(budget, user?.currency, catalog.fxRate) ?? 0) : estimate ? money(estimate.total) : '—'}
               </span>
             </SummaryRow>
+            <label className="field mt-8">
+              <span>Your budget <span className="hint">— optional</span></span>
+              <input
+                className="input num" inputMode="decimal"
+                placeholder={estimate ? money(estimate.total).replace(/[^\d,]/g, '') : 'Set one later'}
+                value={budget} onChange={(e) => setBudget(e.target.value)}
+              />
+            </label>
+            {estimate && <details className="estimate-details">
+              <summary>See cost estimate · {money(estimate.total)}</summary>
+              <div className="mt-16"><BudgetBreakdown estimate={estimate} userBudget={budgetUsd(budget, user?.currency, catalog.fxRate)} /></div>
+            </details>}
             {loc && (
               <SummaryRow label="Booking">
                 {loc.booking.mode === 'direct' ? 'Book on Idekart' : loc.booking.mode === 'redirect' ? 'Via provider' : 'Not needed'}
@@ -333,7 +319,7 @@ export default function NewIdea({ path }: { path: string }) {
       {step > 0 && (
         <div className="sticky-actions">
           <button className="btn btn-ghost" onClick={() => setStep(step - 1)}><Icon name="back" /> Back</button>
-          {step < 4 && (
+          {step < 3 && (
             <div className="row">
               {step === 2 && !locationId && suggestions.length > 0 && <span className="small muted">You can skip and choose later</span>}
               <button className="btn btn-dark" disabled={!canNext} onClick={() => setStep(step + 1)}>
@@ -360,10 +346,4 @@ function budgetUsd(input: string, currency: string | undefined, fx: number): num
   const n = parseFloat(input.replace(/[^\d.]/g, ''))
   if (!Number.isFinite(n) || n <= 0) return null
   return currency === 'NGN' ? n / fx : n
-}
-
-function monthsUntil(iso: string) {
-  const now = new Date()
-  const d = new Date(iso + 'T00:00:00')
-  return (d.getFullYear() - now.getFullYear()) * 12 + d.getMonth() - now.getMonth()
 }

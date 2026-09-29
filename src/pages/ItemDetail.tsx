@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BookingModal } from '../components/BookingModal'
 import { Icon } from '../components/Icon'
+import { LocationPicker } from '../components/LocationPicker'
 import { BudgetBreakdown, LocationFacts, MapCard } from '../components/LocationParts'
 import { BookingChip, CategoryChip, Cover, Modal, Notice, Ring, StatusChip, Stepper, toast } from '../components/ui'
 import { useMoney } from '../lib/money'
@@ -309,10 +310,7 @@ function EditModal({ item, onClose }: { item: BucketItem; onClose: () => void })
         </div>
         <label className="field">
           <span>Location</span>
-          <select className="select" value={f.locationId} onChange={(e) => setF({ ...f, locationId: e.target.value })}>
-            <option value="">No location</option>
-            {locs.map((l) => <option key={l.id} value={l.id}>{l.name} — {l.country}</option>)}
-          </select>
+          <LocationPicker locations={locs} value={f.locationId} onChange={(locationId) => setF({ ...f, locationId })} />
         </label>
         <div className="grid-3">
           <div className="field"><span>People</span><Stepper value={f.travelers} min={1} max={20} onChange={(v) => setF({ ...f, travelers: v })} /></div>

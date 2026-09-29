@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Logo } from '../components/Icon'
 import { CITIES } from '../data/locations'
 import { navigate, query } from '../lib/router'
 import { useStore } from '../lib/store'
@@ -27,23 +26,23 @@ export default function Auth({ mode, path }: { mode: 'login' | 'signup'; path: s
   return (
     <div className="auth-wrap">
       <div className="auth-side">
-        <a className="brand" href="#/" style={{ color: '#fff' }}><Logo /> Idekart</a>
+        <a className="brand" href="#/" style={{ color: '#fff' }}><img src="/IdekartLogo.svg" alt="Idekart" /></a>
         <div>
           <p className="display" style={{ fontSize: 40, lineHeight: 1.1, maxWidth: 420 }}>
             “I want to do this someday” is a plan waiting to happen.
           </p>
           <p className="mt-16" style={{ color: '#bdb8cf', maxWidth: 400 }}>
-            Save your ideas, see where and how much, and track every step to done.
+            Save an idea, find a place on the map, and take the next step when you’re ready. Book only when it makes sense.
           </p>
         </div>
-        <div className="cover" style={{ '--h': 28, position: 'absolute', right: -80, top: 80, width: 260, height: 260, borderRadius: '50%', opacity: 0.5 } as React.CSSProperties}>
+        <div className="cover auth-orbit" style={{ '--h': 28, position: 'absolute', right: -80, top: 80, width: 260, height: 260, borderRadius: '50%', opacity: 0.5 } as React.CSSProperties}>
           <div className="sun" />
         </div>
         <p className="tiny" style={{ color: '#8f8aa6' }}>MVP prototype · data is stored in this browser only</p>
       </div>
 
       <div className="auth-form">
-        <form className="stack" onSubmit={submit} noValidate>
+        <form className={`stack auth-card ${isLogin ? 'login-card' : ''}`} onSubmit={submit} noValidate>
           <h1>{isLogin ? 'Welcome back' : 'Create your account'}</h1>
           <p className="muted">
             {isLogin ? 'Log in to pick up your plans.' : 'It takes 30 seconds. Your first idea is next.'}

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useStore } from '../lib/store'
-import { Icon, Logo } from './Icon'
+import { Icon } from './Icon'
 
 const NAV = [
   { href: '/app', label: 'Dashboard', short: 'Home', icon: 'home' },
@@ -19,7 +19,7 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
   return (
     <div className="shell">
       <aside className="sidebar">
-        <a className="brand" href="#/app"><Logo /> Idekart</a>
+        <a className="brand" href="#/app"><img src="/IdekartLogo.svg" alt="Idekart" /></a>
         {nav.map((n) => (
           <a key={n.href} href={'#' + n.href} className={`nav-link ${active(n.href) ? 'active' : ''}`}>
             <Icon name={n.icon} /> {n.label}
@@ -39,14 +39,14 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
 
       <div>
         <header className="topbar">
-          <a className="brand" href="#/app" style={{ color: '#fff', fontSize: 20 }}><Logo /> Idekart</a>
+          <a className="brand" href="#/app" style={{ color: '#fff', fontSize: 20 }}><img src="/IdekartLogo.svg" alt="Idekart" /></a>
           {user && <a href="#/profile" className="avatar" style={{ textDecoration: 'none' }}>{user.name[0]?.toUpperCase()}</a>}
         </header>
         <main className="main">{children}</main>
       </div>
 
       <nav className="tabbar" aria-label="Primary">
-        {NAV.map((n) => (
+        {nav.map((n) => (
           <a key={n.href} href={'#' + n.href} className={active(n.href) ? 'active' : ''}>
             <Icon name={n.icon} /> {n.short}
           </a>

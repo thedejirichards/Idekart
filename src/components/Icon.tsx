@@ -48,13 +48,3 @@ export function Icon({ name, size, className }: { name: keyof typeof PATHS | str
     </svg>
   )
 }
-
-export function Logo() {
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="9" fill="#f26b3a" />
-      <circle cx="16" cy="13" r="5.5" fill="#fff4e8" />
-      <path d="M7 25c3-4.5 6-6.5 9-6.5s6 2 9 6.5" stroke="#1b1f3b" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-    </svg>
-  )
-}

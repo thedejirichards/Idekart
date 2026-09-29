@@ -20,7 +20,7 @@ export default function History() {
           <p className="muted">Everything you’ve done, booked and paid for.</p>
         </div>
       </div>
-      <div className="seg" style={{ alignSelf: 'flex-start' }}>
+      <div className="seg page-tabs" style={{ alignSelf: 'flex-start' }}>
         <button className={tab === 'done' ? 'on' : ''} onClick={() => setTab('done')}>Completed ({done.length})</button>
         <button className={tab === 'bookings' ? 'on' : ''} onClick={() => setTab('bookings')}>Bookings ({bookings.length})</button>
         <button className={tab === 'payments' ? 'on' : ''} onClick={() => setTab('payments')}>Payments ({payments.length})</button>
