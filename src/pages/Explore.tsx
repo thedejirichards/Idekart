@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '../components/Icon'
-import { Cover } from '../components/ui'
+import { EXPERIENCE_IMAGES } from '../data/experienceImages'
 import { PLACE_REVIEWS } from '../data/reviews'
 import { cityById } from '../data/locations'
 import { formatDuration, travelEstimate } from '../lib/rules'
 import { useStore } from '../lib/store'
 
 const EXPERIENCES = [
-  { id: 'sushi', title: 'Try sushi', detail: 'A little dinner adventure', templateId: 'dining', hue: 342, icon: 'sparkle' },
-  { id: 'beach', title: 'Find a beach day', detail: 'Salt air, boat rides and slow time', templateId: 'beach', hue: 198, icon: 'compass' },
-  { id: 'live-show', title: 'Catch a live show', detail: 'Music, theatre or a night out', templateId: 'concert', hue: 275, icon: 'ticket' },
+  { id: 'sushi', title: 'Try sushi', detail: 'A little dinner adventure', templateId: 'dining', image: EXPERIENCE_IMAGES.sushi, icon: 'sparkle' },
+  { id: 'beach', title: 'Find a beach day', detail: 'Salt air, boat rides and slow time', templateId: 'beach', image: EXPERIENCE_IMAGES.beach, icon: 'compass' },
+  { id: 'live-show', title: 'Catch a live show', detail: 'Music, theatre or a night out', templateId: 'concert', image: EXPERIENCE_IMAGES.liveShow, icon: 'ticket' },
 ] as const
 
 export default function Explore() {
@@ -63,9 +63,10 @@ export default function Explore() {
           <div className="explore-picks">
             {EXPERIENCES.map((pick) => (
               <button className="explore-pick" type="button" key={pick.id} onClick={() => pickExperience(pick.id)}>
-                <Cover hue={pick.hue} height={118} className="explore-pick-cover">
+                <span className="explore-pick-cover">
+                  <img src={pick.image} alt="" loading="lazy" />
                   <span className="chip chip-ink"><Icon name={pick.icon} size={13} /> Pick this idea</span>
-                </Cover>
+                </span>
                 <span className="explore-pick-copy">
                   <b>{pick.title}</b>
                   <small>{pick.detail}</small>

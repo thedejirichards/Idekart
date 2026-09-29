@@ -1,4 +1,5 @@
 import { Icon } from '../components/Icon'
+import { EXPERIENCE_IMAGES } from '../data/experienceImages'
 import { useStore } from '../lib/store'
 
 const STEPS = [
@@ -90,15 +91,15 @@ export default function Landing() {
 function HeroCards() {
   return (
     <>
-      <div className="cover" style={{ '--h': 342, inset: '0 22% 26% 0' } as React.CSSProperties}>
-        <div className="sun" />
+      <div className="hero-photo" style={{ inset: '0 22% 26% 0' }}>
+        <img src={EXPERIENCE_IMAGES.sushi} alt="" />
         <div className="label">
           <div className="eyebrow" style={{ color: '#fff4e8' }}>Dinner idea</div>
           <div className="display" style={{ fontSize: 26, fontWeight: 600 }}>Try sushi</div>
         </div>
       </div>
-      <div className="cover" style={{ '--h': 190, inset: '46% 0 0 34%' } as React.CSSProperties}>
-        <div className="sun" />
+      <div className="hero-photo" style={{ inset: '46% 0 0 34%' }}>
+        <img src={EXPERIENCE_IMAGES.beach} alt="" />
         <div className="label">
           <div className="eyebrow" style={{ color: '#e6fbff' }}>A day out</div>
           <div className="display" style={{ fontSize: 24, fontWeight: 600 }}>Find a beach</div>
