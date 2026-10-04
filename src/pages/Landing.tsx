@@ -23,7 +23,7 @@ export default function Landing() {
         <a className="brand" href="#/"><img src="/IdekartLogo.svg" alt="Idekart" /></a>
         <div className="row">
           {user ? (
-            <a className="btn btn-dark" href="#/app">Open dashboard</a>
+            <a className="btn btn-dark" href="#/new">Your ideas</a>
           ) : (
             <>
               <a className="btn btn-quiet" href="#/login">Log in</a>

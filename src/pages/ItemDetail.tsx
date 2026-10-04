@@ -20,13 +20,12 @@ export default function ItemDetail({ id }: { id: string }) {
   const item = items.find((i) => i.id === id)
   const [modal, setModal] = useState<'edit' | 'complete' | 'book' | 'delete' | null>(null)
   const [newStep, setNewStep] = useState('')
-  const [checkIn, setCheckIn] = useState('')
 
   if (!item) {
     return (
       <div className="empty">
         <h3>We couldn’t find that item</h3>
-        <a className="btn btn-dark mt-16" href="#/app">Back to dashboard</a>
+        <a className="btn btn-dark mt-16" href="#/new">Back to ideas</a>
       </div>
     )
   }
@@ -49,7 +48,7 @@ export default function ItemDetail({ id }: { id: string }) {
 
   return (
     <div className="stack-lg">
-      <a className="btn btn-quiet" href="#/app" style={{ marginLeft: -10, alignSelf: 'flex-start' }}><Icon name="back" /> Bucket list</a>
+      <a className="btn btn-quiet" href="#/new" style={{ marginLeft: -10, alignSelf: 'flex-start' }}><Icon name="back" /> All ideas</a>
 
       <Cover hue={loc?.hue ?? 260} height={200}>
         <div className="row between wrap" style={{ alignItems: 'flex-end' }}>
@@ -127,35 +126,6 @@ export default function ItemDetail({ id }: { id: string }) {
               <input className="input" placeholder="Add your own step…" value={newStep} onChange={(e) => setNewStep(e.target.value)} />
               <button className="btn btn-ghost" disabled={!newStep.trim()}><Icon name="plus" /> Add</button>
             </form>
-          </section>
-
-          {/* Check-ins */}
-          <section className="card">
-            <h3>Check-ins</h3>
-            <p className="small muted">A quick note on how it’s going. Useful when you adjust the plan.</p>
-            <form
-              className="row mt-16"
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (!checkIn.trim()) return
-                updateItem(item.id, { checkIns: [{ date: new Date().toISOString(), note: checkIn.trim() }, ...item.checkIns] })
-                setCheckIn('')
-                toast('Check-in saved')
-              }}
-            >
-              <input className="input" placeholder="e.g. Saved half the budget" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
-              <button className="btn btn-dark" disabled={!checkIn.trim()}>Save</button>
-            </form>
-            {item.checkIns.length > 0 && (
-              <div className="mt-8">
-                {item.checkIns.map((c, i) => (
-                  <div key={i} className="milestone small">
-                    <span className="muted num" style={{ minWidth: 64 }}>{formatDate(c.date, { day: 'numeric', month: 'short' })}</span>
-                    <span>{c.note}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
 
           {/* Location & map */}
@@ -257,7 +227,7 @@ export default function ItemDetail({ id }: { id: string }) {
           <p className="muted">This removes the item and its plan. Bookings already made stay in your history.</p>
           <div className="row between mt-24">
             <button className="btn btn-ghost" onClick={() => setModal(null)}>Keep it</button>
-            <button className="btn btn-danger" onClick={() => { deleteItem(item.id); toast('Item deleted'); navigate('/app') }}>Delete</button>
+            <button className="btn btn-danger" onClick={() => { deleteItem(item.id); toast('Item deleted'); navigate('/new') }}>Delete</button>
           </div>
         </Modal>
       )}

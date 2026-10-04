@@ -240,6 +240,27 @@ input, select, textarea { font: inherit; color: inherit; }
 .empty { text-align: center; padding: 48px 24px; border: 2px dashed var(--line-strong); border-radius: var(--r-lg); }
 .empty h3 { margin: 8px 0 6px; }
 
+/* ---------- New Idea home ---------- */
+.idea-home { min-height: min(72vh, 680px); }
+.idea-home.empty-ideas { display: grid; place-items: center; }
+.idea-home.has-ideas { max-width: 760px; margin-inline: auto; padding: 12px 0 90px; }
+.idea-empty-hint { margin: 0; color: var(--muted); text-align: center; }
+.idea-add-button {
+  display: grid; place-items: center; width: 60px; height: 60px; padding: 0; border: 0; border-radius: 50%;
+  color: #fff; background: var(--accent); box-shadow: 0 8px 22px rgba(194, 71, 26, .28); transition: transform .15s, background .15s;
+}
+.idea-add-button:hover { background: var(--accent-ink); transform: translateY(-2px); }
+.idea-add-button-empty { width: 76px; height: 76px; }
+.idea-history { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.idea-history li { border-bottom: 1px solid var(--line); }
+.idea-history a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 4px; text-decoration: none; }
+.idea-history a:hover .idea-history-title { color: var(--accent-ink); }
+.idea-history-title { flex: 1; min-width: 0; font-weight: 600; }
+.idea-history-meta { display: flex; align-items: center; gap: 10px; flex: none; }
+.idea-history-date { flex: none; color: var(--muted); font-size: 12px; }
+.idea-home.has-ideas > .idea-add-button { position: fixed; right: 32px; bottom: 32px; z-index: 19; }
+.idea-home.empty-ideas > .idea-add-button { position: fixed; right: 32px; bottom: 32px; z-index: 19; }
+
 /* ---------- Wizard ---------- */
 .steps { display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap; }
 .steps .s { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--faint); padding: 6px 12px 6px 6px; border-radius: 999px; }
@@ -339,6 +360,8 @@ input, select, textarea { font: inherit; color: inherit; }
 
 @media (max-width: 860px) {
   .main { padding: 20px 16px calc(100px + env(safe-area-inset-bottom)); }
+  .idea-home.has-ideas > .idea-add-button { right: 18px; bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .idea-home.empty-ideas > .idea-add-button { right: 18px; bottom: calc(76px + env(safe-area-inset-bottom)); }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero { grid-template-columns: 1fr; gap: 24px; }
   .hero-art { width: 100%; max-width: 420px; margin-inline: auto; }
@@ -350,6 +373,11 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 600px) {
   h2 { font-size: 22px; }
   .main { padding: 18px 14px calc(96px + env(safe-area-inset-bottom)); }
+  .idea-home.has-ideas { padding-top: 4px; }
+  .idea-history { margin-top: 16px; }
+  .idea-history a { padding-block: 15px; }
+  .idea-history-meta { gap: 6px; }
+  .idea-history-date { font-size: 11px; }
   .stack-lg { gap: 18px; }
   .page-head { align-items: flex-start; margin-bottom: 18px; }
   .page-head > .btn { width: 100%; }

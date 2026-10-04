@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { BudgetBreakdown, LocationFacts, MapCard } from '../components/LocationParts'
-import { CategoryChip, Cover, Notice, Stepper, toast } from '../components/ui'
+import { CategoryChip, Cover, StatusChip, Stepper, toast } from '../components/ui'
 import { useMoney } from '../lib/money'
 import { CATEGORIES } from '../data/categories'
 import { cityById } from '../data/locations'
-import { TEMPLATES, templateById } from '../data/templates'
+import { templateById } from '../data/templates'
 import { navigate, query } from '../lib/router'
 import { estimateBudget, formatDuration, generateMilestones, matchIdea, suggestLocations, today, titleFromIdea } from '../lib/rules'
 import type { IdeaMatch } from '../lib/rules'
@@ -13,28 +13,19 @@ import { useStore } from '../lib/store'
 import type { CategoryId } from '../lib/types'
 import { formatDate } from '../lib/util'
 
-const EXAMPLES = [
-  'Try sushi',
-  'Take a boat to a beach',
-  'Catch a live show',
-  'Learn to cook jollof properly',
-  'Go on a safari',
-  'Celebrate somewhere special',
-]
-
 const STEP_NAMES = ['Idea', 'Details', 'Place', 'Plan']
 
 export default function NewIdea({ path }: { path: string }) {
-  const { user, catalog, location, addItem } = useStore()
+  const { user, catalog, location, addItem, items } = useStore()
   const money = useMoney()
   const home = cityById(user?.homeCity ?? 'lagos')
   const preLoc = location(query(path).get('location'))
 
+  const [creating, setCreating] = useState(Boolean(preLoc))
   const [step, setStep] = useState(0)
   const [idea, setIdea] = useState(preLoc ? `Visit ${preLoc.name}` : '')
   const [m, setM] = useState<IdeaMatch | null>(null)
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
   const [category, setCategory] = useState<CategoryId>('personal')
   const [templateId, setTemplateId] = useState('custom')
   const [targetDate, setTargetDate] = useState('')
@@ -42,14 +33,25 @@ export default function NewIdea({ path }: { path: string }) {
   const [nights, setNights] = useState(0)
   const [locationId, setLocationId] = useState<string | null>(preLoc?.id ?? null)
   const [budget, setBudget] = useState<string>('')
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+  const [locationError, setLocationError] = useState('')
+  const ideas = useMemo(
+    () => [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [items],
+  )
 
+  const origin = useMemo(
+    () => currentPosition ? { ...home, name: 'Current location', ...currentPosition } : home,
+    [currentPosition, home],
+  )
   const template = templateById(templateId)!
   const loc = location(locationId)
   const suggestions = useMemo(
-    () => suggestLocations(templateId, catalog.locations, home, { travelers, nights }, m?.matchedLocation ?? preLoc),
-    [templateId, catalog.locations, home, travelers, nights, m, preLoc],
+    () => suggestLocations(templateId, catalog.locations, origin, { travelers, nights }, m?.matchedLocation ?? preLoc),
+    [templateId, catalog.locations, origin, travelers, nights, m, preLoc],
   )
-  const estimate = loc ? estimateBudget(loc, home, { travelers, nights }) : null
+  const estimate = loc ? estimateBudget(loc, origin, { travelers, nights }) : null
   const milestones = useMemo(() => {
     const planLocation = catalog.locations.find((candidate) => candidate.id === locationId) ?? null
     return generateMilestones(template, targetDate || null, planLocation)
@@ -57,7 +59,7 @@ export default function NewIdea({ path }: { path: string }) {
 
   function analyse(text = idea) {
     if (!text.trim()) return
-    const r = matchIdea(`${text} ${description}`, catalog.locations)
+    const r = matchIdea(text, catalog.locations)
     setIdea(text)
     setM(r)
     setTitle(titleFromIdea(text) || text)
@@ -68,30 +70,119 @@ export default function NewIdea({ path }: { path: string }) {
     setStep(1)
   }
 
-  function pickTemplate(id: string) {
-    const t = templateById(id)!
-    setTemplateId(id)
-    setCategory(t.category)
-    setNights(t.defaultNights)
-    if (loc && !loc.templates.includes(id)) setLocationId(null)
+  function updateTitle(text: string) {
+    setTitle(text)
+    if (!text.trim()) return
+    const r = matchIdea(text, catalog.locations)
+    setM(r)
+    setCategory(r.template.category)
+    setTemplateId(r.template.id)
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationError('Current location is not available in this browser.')
+      return
+    }
+    setLocating(true)
+    setLocationError('')
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setCurrentPosition({ lat: coords.latitude, lng: coords.longitude })
+        setLocating(false)
+      },
+      (error) => {
+        setLocating(false)
+        setLocationError(error.code === 1
+          ? 'Location access was denied. Allow access in your browser and try again.'
+          : 'Could not find your current location. Please try again.')
+      },
+      { enableHighAccuracy: false, maximumAge: 300_000, timeout: 12_000 },
+    )
   }
 
   function save() {
     const chosen = budgetUsd(budget, user?.currency, catalog.fxRate) ?? estimate?.total ?? null
-    const item = addItem({
-      idea, title: title.trim() || idea, description: description.trim(), category, templateId,
+    addItem({
+      idea, title: title.trim() || idea, description: '', category, templateId,
       locationId, targetDate: targetDate || null, travelers, nights, budget: chosen ? Math.round(chosen) : null,
       milestones, checkIns: [], status: loc || targetDate ? 'planning' : 'idea',
     })
-    toast('Added to your bucket list')
-    navigate(`/item/${item.id}`)
+    toast('Idea added')
+    setCreating(false)
+    resetComposer()
+    navigate('/new')
+  }
+
+  function resetComposer() {
+    setStep(0)
+    setIdea('')
+    setM(null)
+    setTitle('')
+    setCategory('personal')
+    setTemplateId('custom')
+    setTargetDate('')
+    setTravelers(1)
+    setNights(0)
+    setLocationId(null)
+    setBudget('')
+    setCurrentPosition(null)
+    setLocating(false)
+    setLocationError('')
+  }
+
+  function closeComposer() {
+    resetComposer()
+    setCreating(false)
+    navigate('/new')
+  }
+
+  function openComposer() {
+    resetComposer()
+    setCreating(true)
+    navigate('/new')
   }
 
   const canNext = step !== 1 || title.trim().length > 0
 
+  if (!creating) {
+    return (
+      <section className={`idea-home ${ideas.length ? 'has-ideas' : 'empty-ideas'}`} aria-label="Your ideas">
+        {ideas.length === 0 ? (
+          <>
+            <p className="idea-empty-hint">Click + to add your first idea.</p>
+            <button className="idea-add-button idea-add-button-empty" type="button" onClick={openComposer} aria-label="Create your first idea" title="Create your first idea">
+              <Icon name="plus" size={34} />
+            </button>
+          </>
+        ) : (
+          <>
+            <h1>Your ideas</h1>
+            <ul className="idea-history" aria-label="Idea history">
+              {ideas.map((item) => (
+                <li key={item.id}>
+                  <a href={`#/item/${item.id}`}>
+                    <span className="idea-history-title">{item.title}</span>
+                    <span className="idea-history-meta">
+                      <StatusChip status={item.status} />
+                      <time className="idea-history-date" dateTime={item.createdAt}>{formatDate(item.createdAt)}</time>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <button className="idea-add-button" type="button" onClick={openComposer} aria-label="Create a new idea" title="Create a new idea">
+              <Icon name="plus" size={28} />
+            </button>
+          </>
+        )}
+      </section>
+    )
+  }
+
   return (
-    <div>
-      <a className="btn btn-quiet" href="#/app" style={{ marginLeft: -10 }}><Icon name="back" /> Dashboard</a>
+    <div className="new-idea-flow">
+      <button className="btn btn-quiet" type="button" onClick={closeComposer} style={{ marginLeft: -10 }}><Icon name="back" /> All ideas</button>
       <div className="steps mt-16" aria-label="Progress">
         {STEP_NAMES.map((n, i) => (
           <div key={n} className={`s ${i === step ? 'on' : i < step ? 'done' : ''}`}>
@@ -111,15 +202,6 @@ export default function NewIdea({ path }: { path: string }) {
               className="idea-input" autoFocus placeholder="Try sushi…" value={idea}
               onChange={(e) => setIdea(e.target.value)} aria-label="Your idea"
             />
-            <label className="field idea-note-field">
-              <span>A little note <span className="hint">— optional, but it helps us make this yours</span></span>
-              <textarea className="textarea" rows={2} placeholder="Who’s coming? What would make it special? Any place or detail on your mind?" value={description} onChange={(e) => setDescription(e.target.value)} />
-            </label>
-            <div className="row wrap" style={{ gap: 8 }}>
-              {EXAMPLES.map((ex) => (
-                <button type="button" key={ex} className="suggest-chip" onClick={() => analyse(ex)}>{ex}</button>
-              ))}
-            </div>
             <div className="row mt-16">
               <button className="btn btn-primary btn-lg" disabled={!idea.trim()}>Find my experience <Icon name="arrow" /></button>
             </div>
@@ -128,33 +210,21 @@ export default function NewIdea({ path }: { path: string }) {
       )}
 
       {step === 1 && m && (
-        <section className="split">
-          <div className="card stack">
-            <div>
-              <div className="eyebrow">Step 2 · Details</div>
-              <h2 className="mt-4">Make it feel like yours</h2>
-            </div>
+        <section className="stack-lg" style={{ maxWidth: 760 }}>
+          <div>
+            <div className="eyebrow">Step 2 · Details</div>
+            <h2 className="mt-4">Make it feel like yours</h2>
+          </div>
+          <div className="stack">
             <label className="field">
               <span>Title</span>
-              <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input className="input" value={title} onChange={(e) => updateTitle(e.target.value)} />
             </label>
-            <div className="grid-2">
-              <label className="field">
-                <span>Category</span>
-                <select className="select" value={category} onChange={(e) => setCategory(e.target.value as CategoryId)}>
-                  {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </label>
-              <label className="field">
-                <span>Template</span>
-                <select className="select" value={templateId} onChange={(e) => pickTemplate(e.target.value)}>
-                  {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </label>
-            </div>
             <label className="field">
-              <span>Your note <span className="hint">— optional</span></span>
-              <textarea className="textarea" placeholder="Add a detail that helps shape the experience. You can change this later." value={description} onChange={(e) => setDescription(e.target.value)} />
+              <span>Category</span>
+              <select className="select" value={category} onChange={(e) => setCategory(e.target.value as CategoryId)}>
+                {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </label>
             <div className="grid-3">
               <label className="field">
@@ -171,35 +241,6 @@ export default function NewIdea({ path }: { path: string }) {
               </div>
             </div>
           </div>
-
-          <aside className="stack">
-            <div className="card-flat stack" style={{ background: 'var(--sand)', border: 0 }}>
-              <div className="row between">
-                <span className="small strong">Matched template</span>
-                <span className={`chip ${m.confidence === 'high' ? 'chip-teal' : m.confidence === 'medium' ? 'chip-gold' : ''}`}>
-                  {m.confidence === 'high' ? 'Strong match' : m.confidence === 'medium' ? 'Likely match' : 'Custom'}
-                </span>
-              </div>
-              <h3>{template.name}</h3>
-              {template.blurb && <p className="small muted">{template.blurb}</p>}
-              <div className="row wrap" style={{ gap: 6 }}>
-                <CategoryChip id={category} />
-                {m.matchedLocation && <span className="chip chip-accent"><Icon name="pin" size={12} /> {m.matchedLocation.name}</span>}
-                {m.matchedKeywords.slice(0, 3).map((k) => <span className="chip" key={k}>“{k}”</span>)}
-              </div>
-            </div>
-            {template.prep.length > 0 && (
-              <div className="card-flat">
-                <div className="small strong">You’ll probably need</div>
-                <ul className="small muted" style={{ margin: '8px 0 0', paddingLeft: 18 }}>
-                  {template.prep.map((p) => <li key={p}>{p}</li>)}
-                </ul>
-              </div>
-            )}
-            {template.requiresBooking && (
-              <Notice tone="teal">Some places need a reservation; others are easy to turn up for. We’ll show you the options for each place.</Notice>
-            )}
-          </aside>
         </section>
       )}
 
@@ -207,13 +248,22 @@ export default function NewIdea({ path }: { path: string }) {
         <section className="stack">
           <div>
             <div className="eyebrow">Step 3 · Place <span className="hint">— optional</span></div>
-            <h2 className="mt-4">Pick a place, or keep it open</h2>
-            <p className="muted mt-4">Suggestions are ranked by estimated cost from {home.name}. You can skip this and decide later.</p>
+            <div className="row between wrap mt-4">
+              <h2>Pick a place, or keep it open</h2>
+              <div className="row wrap">
+                <button className="btn btn-ghost btn-sm" type="button" onClick={useCurrentLocation} disabled={locating}>
+                  <Icon name="pin" /> {locating ? 'Finding location…' : currentPosition ? 'Update current location' : 'Use current location'}
+                </button>
+                {currentPosition && <button className="btn btn-quiet btn-sm" type="button" onClick={() => setCurrentPosition(null)}>Use home city</button>}
+              </div>
+            </div>
+            <p className="muted mt-4">Suggestions are ranked by estimated cost from {origin.name}. You can skip this and decide later.</p>
+            {locationError && <p className="error" role="alert">{locationError}</p>}
           </div>
           {suggestions.length === 0 ? (
             <div className="empty">
               <h3>No specific places for this one</h3>
-                <p className="muted">This idea can happen anywhere. Continue and keep your plan flexible.</p>
+              <p className="muted">This idea can happen anywhere. Continue and keep your plan flexible.</p>
             </div>
           ) : (
             <div className="grid-auto">

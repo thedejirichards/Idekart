@@ -216,7 +216,12 @@ export function suggestLocations(
   opts: { travelers: number; nights: number },
   pinned?: Location | null,
 ): Suggestion[] {
-  const pool = locations.filter((l) => l.active && l.templates.includes(templateId))
+  const activeLocations = locations.filter((location) => location.active)
+  const matching = locations.filter((l) => l.active && l.templates.includes(templateId))
+  const category = templateById(templateId)?.category
+  const relatedTemplateIds = new Set(TEMPLATES.filter((template) => template.category === category).map((template) => template.id))
+  const related = activeLocations.filter((location) => location.templates.some((id) => relatedTemplateIds.has(id)))
+  const pool = matching.length ? matching : related
   if (pinned && !pool.includes(pinned)) pool.unshift(pinned)
   const out = pool.map((location) => {
     const estimate = estimateBudget(location, from, opts)

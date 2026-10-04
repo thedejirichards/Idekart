@@ -20,7 +20,7 @@ export default function Auth({ mode, path }: { mode: 'login' | 'signup'; path: s
     }
     const err = isLogin ? logIn(form.email, form.password) : signUp(form)
     if (err) return setError(err)
-    navigate(next && next !== '/login' ? next : isLogin ? '/app' : '/new')
+    navigate(next && next !== '/login' ? next : '/new')
   }
 
   return (

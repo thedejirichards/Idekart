@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { SEED_LOCATIONS } from '../data/locations'
-import { templateById } from '../data/templates'
-import { addDays, generateMilestones, today } from './rules'
 import type { Booking, BucketItem, Catalog, Location, Payment, User } from './types'
 import { load, reference, save, uid } from './util'
 
@@ -14,9 +12,28 @@ const K = {
   payments: 'idekart.payments',
   catalog: 'idekart.catalog',
   seeded: 'idekart.seeded.v1',
+  demoIdeasCleared: 'idekart.demo-ideas-cleared.v1',
 }
 
 export const DEFAULT_FX = 1550
+
+const SEEDED_DEMO_IDEAS = [
+  { title: 'Visit Zanzibar', idea: 'I want to visit Zanzibar' },
+  { title: 'Anniversary tasting-menu dinner', idea: 'Anniversary dinner at a tasting-menu restaurant' },
+  { title: 'Ride the Obudu cable car', idea: 'Ride the cable car at Obudu' },
+]
+
+function loadInitialItems() {
+  const items = load<BucketItem[]>(K.items, [])
+  if (load(K.demoIdeasCleared, false)) return items
+
+  const remaining = items.filter((item) => !(
+    item.userId === 'u-demo' && SEEDED_DEMO_IDEAS.some((seed) => seed.title === item.title && seed.idea === item.idea)
+  ))
+  if (remaining.length !== items.length) save(K.items, remaining)
+  save(K.demoIdeasCleared, true)
+  return remaining
+}
 
 function seedDemo() {
   if (load(K.seeded, false)) return
@@ -29,36 +46,7 @@ function seedDemo() {
     id: 'u-admin', name: 'Admin', email: 'admin@idekart.app', password: 'admin1234',
     homeCity: 'lagos', currency: 'NGN', role: 'admin', createdAt: now,
   }
-  const loc = (id: string) => SEED_LOCATIONS.find((l) => l.id === id)!
-  const t = today()
-  const zanzibarDate = addDays(t, 75)
-  const zanzibar: BucketItem = {
-    id: uid(), userId: demo.id, idea: 'I want to visit Zanzibar', title: 'Visit Zanzibar',
-    description: 'Stone Town, spice tour and a few slow beach days in Nungwi.', category: 'travel',
-    templateId: 'beach', locationId: 'zanzibar', targetDate: zanzibarDate, travelers: 2, nights: 4, budget: 2400,
-    milestones: generateMilestones(templateById('beach')!, zanzibarDate, loc('zanzibar')),
-    checkIns: [{ date: now, note: 'Passport renewed.' }], status: 'planning', createdAt: now,
-  }
-  zanzibar.milestones.slice(0, 2).forEach((m) => (m.done = true))
-  const dinnerDate = addDays(t, 20)
-  const dinner: BucketItem = {
-    id: uid(), userId: demo.id, idea: 'Anniversary dinner at a tasting-menu restaurant', title: 'Anniversary tasting-menu dinner',
-    description: 'Five years — somewhere special.', category: 'food', templateId: 'dining', locationId: 'lagos-supper',
-    targetDate: dinnerDate, travelers: 2, nights: 0, budget: 250,
-    milestones: generateMilestones(templateById('dining')!, dinnerDate, loc('lagos-supper')),
-    checkIns: [], status: 'idea', createdAt: now,
-  }
-  const doneDate = addDays(t, -40)
-  const obudu: BucketItem = {
-    id: uid(), userId: demo.id, idea: 'Ride the cable car at Obudu', title: 'Ride the Obudu cable car',
-    description: 'Cool air and the canopy walk.', category: 'adventure', templateId: 'hiking', locationId: 'obudu',
-    targetDate: doneDate, travelers: 3, nights: 2, budget: 900,
-    milestones: generateMilestones(templateById('hiking')!, doneDate, loc('obudu')).map((m) => ({ ...m, done: true })),
-    checkIns: [], status: 'completed', createdAt: addDays(t, -120) + 'T09:00:00.000Z', completedAt: doneDate + 'T18:00:00.000Z',
-    reflection: 'Colder than expected. Worth every minute of the climb.',
-  }
   save(K.users, [demo, admin])
-  save(K.items, [zanzibar, dinner, obudu])
   save(K.seeded, true)
 }
 
@@ -96,7 +84,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return load(K.users, [])
   })
   const [sessionId, setSessionId] = useState<string | null>(() => load(K.session, null))
-  const [allItems, setItems] = useState<BucketItem[]>(() => load(K.items, []))
+  const [allItems, setItems] = useState<BucketItem[]>(loadInitialItems)
   const [allBookings, setBookings] = useState<Booking[]>(() => load(K.bookings, []))
   const [allPayments, setPayments] = useState<Payment[]>(() => load(K.payments, []))
   const [catalog, setCatalog] = useState<Catalog>(() => {
